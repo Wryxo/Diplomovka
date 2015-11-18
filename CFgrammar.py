@@ -1,49 +1,73 @@
 from itertools import *
 from operator import itemgetter
+from collections import deque
 
-def createRule(rule, count, last):
-	maxi = maxsize
-	if maxsize > count:
-		maxi = count
-	if count == 0:
-		if not rule in rulez['Z']:
-			rulez['Z'][rule] = 1
-		return
-	if last == 'A':
-		for i in range(maxi, 0, -1):
-			createRule(rule + 'D'+str(i), count-i, 'D')
-			createRule(rule + 'S'+str(i), count-i, 'S')
-	elif last == 'D':
-		for i in range(maxi, 0, -1):
-			createRule(rule + 'A'+str(i), count-i, 'A')
-			createRule(rule + 'S'+str(i), count-i, 'S')
-	elif last == 'S':
-		for i in range(maxi, 0, -1):
-			createRule(rule + 'A'+str(i), count-i, 'A')
-			createRule(rule + 'D'+str(i), count-i, 'D')
-	else:
-		for i in range(maxi, 0, -1):
-			createRule(rule + 'A'+str(i), count-i, 'A')
-			x = 'A'+str(i)
-			if not x in rulez:
-				rulez[x] = {}
-				for z in product(alpha, repeat=i):
-					s = ''.join(z)
-					rulez[x][s] = 1
-			createRule(rule + 'D'+str(i), count-i, 'D')
-			x = 'D'+str(i)
-			if not x in rulez:
-				rulez[x] = {}
-				for z in product(digit, repeat=i):
-					s = ''.join(z)
-					rulez[x][s] = 1
-			createRule(rule + 'S'+str(i), count-i, 'S')
-			x = 'S'+str(i)
-			if not x in rulez:
-				rulez[x] = {}
-				for z in product(special, repeat=i):
-					s = ''.join(z)
-					rulez[x][s] = 1
+def prepareQueue(maxlength, maxsize):
+	# priprav queue, vytvor vsetky slova pre zakladne neterminaly
+	for i in range(1, maxsize):
+		x = 'A'+str(i)
+		queue.append((x, maxlength-i))
+		if not x in rulez['Z']:
+			rulez['Z'][x] = 1
+		if not x in rulez:
+			rulez[x] = {}
+			for z in product(alpha, repeat=i):
+				s = ''.join(z)
+				rulez[x][s] = 1
+		x = 'D'+str(i)
+		queue.append((x, maxlength-i))
+		if not x in rulez['Z']:
+			rulez['Z'][x] = 1
+		if not x in rulez:
+			rulez[x] = {}
+			for z in product(alpha, repeat=i):
+				s = ''.join(z)
+				rulez[x][s] = 1
+		x = 'S'+str(i)
+		queue.append((x, maxlength-i))
+		if not x in rulez['Z']:
+			rulez['Z'][x] = 1
+		if not x in rulez:
+			rulez[x] = {}
+			for z in product(alpha, repeat=i):
+				s = ''.join(z)
+				rulez[x][s] = 1
+
+def createRules(maxsize):
+	# dokym mas co, vytvaraj vsetky mozne zlozene neterminaly
+	while queue:
+		tmp = queue.popleft()
+		for i in range(1,maxsize):
+			if tmp[1]-i < 0:
+				break
+			else:
+				if tmp[0][-2] == 'A':
+					if tmp[0][-1] == str(maxsize-1):
+						x = tmp[0]+'A'+str(i)
+						queue.append((x, tmp[1]-i))
+						rulez['Z'][x] = 1
+				else:
+					x = tmp[0]+'A'+str(i)
+					queue.append((x, tmp[1]-i))
+					rulez['Z'][x] = 1
+				if tmp[0][-2] == 'D':
+					if tmp[0][-1] == str(maxsize-1):
+						x = tmp[0]+'D'+str(i)
+						queue.append((x, tmp[1]-i))
+						rulez['Z'][x] = 1
+				else:
+					x = tmp[0]+'D'+str(i)
+					queue.append((x, tmp[1]-i))
+					rulez['Z'][x] = 1
+				if tmp[0][-2] == 'S':
+					if tmp[0][-1] == str(maxsize-1):
+						x = tmp[0]+'S'+str(i)
+						queue.append((x, tmp[1]-i))
+						rulez['Z'][x] = 1
+				else:
+					x = tmp[0]+'S'+str(i)
+					queue.append((x, tmp[1]-i))
+					rulez['Z'][x] = 1
 
 def updateMyrules(word):
 	buf = 0
@@ -97,10 +121,11 @@ koeficient = 10000
 alpha = 'abcdefghijklmnopqrstuvwxyz'
 digit = '0123456789'
 special = "'~!@#$%^&*;,.-<>`_ "
+queue = deque([])
 rulez = {}
 rulez['Z'] = {}
-for i in range(0,maxlength):
-	createRule('', i+1, 'Z')
+prepareQueue(14,5)
+createRules(5)
 ruleCount={}
 for rule in rulez:
 	ruleCount[rule] = len(rulez[rule])
@@ -111,10 +136,11 @@ with open('johnLC.txt') as f:
 		if len(word) > 0:
 			updateMyrules(word)
 
+rc = sum(ruleCount.values())
 for rule in rulez:
 	for r in rulez[rule]:
 		x = rulez[rule][r]
-		rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
+		rulez[rule][r] = float((x / rc) * koeficient)
 
 for x in rulez:
 	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
@@ -146,31 +172,41 @@ class Neterminal:
 		maximum = -1
 		maxim = []
 		for z in product([-1, 0, 1], repeat=len(self.deti)):
-			temp = 1
+			notnull = False
+			temp = self.chance
 			for x in range(0, len(self.deti)):
-				if (self.deti[x]+z[x]) < 0:
+				if (z[x] != 0):
+					notnull = True
+				if (self.deti[x]+z[x]) < 0 or (self.deti[x]+z[x]) >= len(rulez[str(self.net[2*x:2*(x+1)])]):
 					break
+				temp /= rulez[str(self.net[2*x:2*(x+1)])][self.deti[x]][1]
 				temp *= rulez[str(self.net[2*x:2*(x+1)])][self.deti[x]+z[x]][1]
 			else:
-				if temp < self.chance and temp > maximum:
-					maximum = temp
-					maxim = z
+				#print(str(z) + " " + str(temp))
+				if temp <= self.chance and temp > maximum and notnull:
+					if temp == self.chance:
+						if sum(z) >= 0:
+							maximum = temp
+							maxim = z
+					else:
+						maximum = temp
+						maxim = z
 		for i in range(0, len(self.deti)):
-			self.chance /= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
+			#self.chance /= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
 			self.deti[i] += maxim[i]
-			self.chance *= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
+			#self.chance *= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
+		self.chance = maximum
 		return ret
 
 nets=[]
 for r in rulez['Z']:
 	nets.append(Neterminal(r[0], [0] * (len(str(r[0]))//2)))
 
-print(rulez['A4'])
-print(rulez['A2'])
 print(nets[0].net)
-for i in range(0, 20):
-	print(nets[0].next())
+for i in range(0, 100):
 	print(nets[0].chance)
+	print(nets[0].next())
+	print()
 #curr = 0
 #for i in range(0,10):
 #	cc = nets[curr].chance * rulez['Z'][curr][1]
