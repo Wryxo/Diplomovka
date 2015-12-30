@@ -207,29 +207,3 @@ nets=[]
 for r in rulez['Z']:
 	nets.append(Neterminal(r[0], [0] * (len(str(r[0]))//2)))
 
-#print(nets[0].net)
-#for i in range(0, 200):
-#	print(nets[0].chance)
-#	print(nets[0].next())
-#	print()
-#curr = 0
-#for i in range(0,10):
-#	cc = nets[curr].chance * rulez['Z'][curr][1]
-#	pc = -1
-#	nc = -1
-#	ncurr = 0
-#	print(nets[curr].next())
-#	if curr < len(nets)-1:
-#		n = nets[curr+1]
-#		nc = n.chance * rulez['Z'][curr+1][1]
-#		if (nc > cc):
-#			ncurr = 1
-#	if curr > 0:
-#		p = nets[curr-1]
-#		pc = p.chance * rulez['Z'][curr-1][1]
-#		if (pc > cc):
-#			ncurr = -1
-#	print(pc)
-#	print(cc)
-#	print(nc)
-#	curr += ncurr
