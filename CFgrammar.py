@@ -1,6 +1,9 @@
 from itertools import *
 from operator import itemgetter
 from collections import deque
+import heapq
+import copy
+import json
 
 def prepareQueue(maxlength, maxsize):
 	# priprav queue, vytvor vsetky slova pre zakladne neterminaly
@@ -117,10 +120,10 @@ def updateMyrules(word):
 
 maxlength = 8
 maxsize = 4
-koeficient = 1
+koeficient = 100
 alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 digit = '0123456789'
-special = "'~!@#$%^&*;,.-<>`_ "
+special = "+=?'~!@#$%^&*:;,.-<>`_ "
 queue = deque([])
 rulez = {}
 rulez['Z'] = {}
@@ -130,12 +133,7 @@ ruleCount={}
 for rule in rulez:
 	ruleCount[rule] = len(rulez[rule])
 #print(ruleCount)
-with open('john.txt') as f:
-	for line in f:
-		word = line.rstrip('\n')
-		if len(word) > 0:
-			updateMyrules(word)
-with open('cain.txt') as f:
+with open('rockyou.txt') as f:
 	for line in f:
 		word = line.rstrip('\n')
 		if len(word) > 0:
@@ -150,60 +148,14 @@ for rule in rulez:
 for x in rulez:
 	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
 
-print(ruleCount)
-for rule in rulez:
-	print(rule + ":")
-	for r in rulez[rule]:
-		print("\t"+str(r[0])+"-"+"{0:.4f}".format(r[1]))
-	print()
-	print()
+with open('rockyou.json', 'w') as fp:
+    json.dump(rulez, fp)
+#print(ruleCount)
+#for rule in rulez:
+#	print(rule + ":")
+#	for r in rulez[rule]:
+#		print("\t"+str(r[0])+"-"+"{0:.4f}".format(r[1]))
+#	print()
+#	print()
 
-class Neterminal:
-	deti=[]
-	net=None
-	chance=1
-
-	def __init__(self, net, indexy):
-		self.deti = indexy
-		self.net = net
-		for i in range(0, len(indexy)):
-			self.chance *= rulez[str(net[2*i:2*(i+1)])][indexy[i]][1]
-
-	def next(self):
-		ret=''
-		for i in range(0, len(self.deti)):
-			ret += str(rulez[str(self.net[2*i:2*(i+1)])][self.deti[i]][0])
-
-		maximum = -1
-		maxim = []
-		for z in product([-1, 0, 1], repeat=len(self.deti)):
-			notnull = False
-			temp = self.chance
-			for x in range(0, len(self.deti)):
-				if (z[x] != 0):
-					notnull = True
-				if (self.deti[x]+z[x]) < 0 or (self.deti[x]+z[x]) >= len(rulez[str(self.net[2*x:2*(x+1)])]):
-					break
-				temp /= rulez[str(self.net[2*x:2*(x+1)])][self.deti[x]][1]
-				temp *= rulez[str(self.net[2*x:2*(x+1)])][self.deti[x]+z[x]][1]
-			else:
-				#print(str(z) + " " + str(temp))
-				if temp <= self.chance and temp > maximum and notnull:
-					if temp == self.chance:
-						if sum(z) >= 0:
-							maximum = temp
-							maxim = z
-					else:
-						maximum = temp
-						maxim = z
-		for i in range(0, len(self.deti)):
-			#self.chance /= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
-			self.deti[i] += maxim[i]
-			#self.chance *= rulez[str(self.net[2*x:2*(x+1)])][self.deti[i]][1]
-		self.chance = maximum
-		return ret
-
-nets=[]
-for r in rulez['Z']:
-	nets.append(Neterminal(r[0], [0] * (len(str(r[0]))//2)))
 
