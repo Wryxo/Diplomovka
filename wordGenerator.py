@@ -7,12 +7,16 @@ import json
 import sys
 
 
-with open('rockyou.json') as data_file:    
+if len(sys.argv) < 3:
+	print("wordCount inputfile")
+	sys.exit()
+
+with open(sys.argv[2]) as data_file:    
     rulez = json.load(data_file)
 
 pq = []
 counter = count()
-maximum = 1000000
+maximum = int(sys.argv[1])
 c = 0
 
 def add_task(task, priority=0):

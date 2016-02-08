@@ -4,6 +4,7 @@ from collections import deque
 import heapq
 import copy
 import json
+import sys
 
 def prepareQueue(maxlength, maxsize):
 	# priprav queue, vytvor vsetky slova pre zakladne neterminaly
@@ -114,12 +115,16 @@ def updateMyrules(word):
 	rulez[current + str(len(word)-buf)][str(s)] += 1
 	ruleCount[current + str(len(word)-buf)] += 1
 	if not rule in rulez['Z']:
-		rulez['Z'][rule] = 0
+		rulez['Z'][rule] = 1
 	rulez['Z'][rule] += 1
 	ruleCount['Z'] += 1
 
-maxlength = 8
-maxsize = 4
+if len(sys.argv) < 5:
+	print("maxlength maxsize inputfile outputfile")
+	sys.exit()
+
+maxlength = int(sys.argv[1])
+maxsize = int(sys.argv[2])
 koeficient = 100
 alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 digit = '0123456789'
@@ -133,10 +138,11 @@ ruleCount={}
 for rule in rulez:
 	ruleCount[rule] = len(rulez[rule])
 #print(ruleCount)
-with open('rockyou.txt') as f:
+with open(sys.argv[3]) as f:
 	for line in f:
 		word = line.rstrip('\n')
 		if len(word) > 0:
+			w = word.split('[')
 			updateMyrules(word)
 
 #rc = sum(ruleCount.values())
@@ -148,7 +154,7 @@ for rule in rulez:
 for x in rulez:
 	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
 
-with open('rockyou.json', 'w') as fp:
+with open(sys.argv[4], 'w') as fp:
     json.dump(rulez, fp)
 #print(ruleCount)
 #for rule in rulez:
