@@ -15,7 +15,16 @@ def prepareQueue(maxlength, maxsize):
 			rulez['Z'][x] = 1
 		if not x in rulez:
 			rulez[x] = {}
-			for z in product(alpha, repeat=i):
+			for z in product(lower, repeat=i):
+				s = ''.join(z)
+				rulez[x][s] = 1
+		x = 'U'+str(i)
+		queue.append((x, maxlength-i))
+		if not x in rulez['Z']:
+			rulez['Z'][x] = 1
+		if not x in rulez:
+			rulez[x] = {}
+			for z in product(upper, repeat=i):
 				s = ''.join(z)
 				rulez[x][s] = 1
 		x = 'D'+str(i)
@@ -54,6 +63,15 @@ def createRules(maxsize):
 					x = tmp[0]+'A'+str(i)
 					queue.append((x, tmp[1]-i))
 					rulez['Z'][x] = 1
+				if tmp[0][-2] == 'U':
+					if tmp[0][-1] == str(maxsize):
+						x = tmp[0]+'U'+str(i)
+						queue.append((x, tmp[1]-i))
+						rulez['Z'][x] = 1
+				else:
+					x = tmp[0]+'U'+str(i)
+					queue.append((x, tmp[1]-i))
+					rulez['Z'][x] = 1
 				if tmp[0][-2] == 'D':
 					if tmp[0][-1] == str(maxsize):
 						x = tmp[0]+'D'+str(i)
@@ -78,17 +96,26 @@ def updateMyrules(word):
 	current = 'A'
 	rule = ''
 	s=word[0]
+	if word[0] in upper:
+		current = 'U'
 	if word[0] in digit:
 		current = 'D'
 	if word[0] in special:
 		current = 'S'
 	for i in range(1, len(word)):
-		if (word[i] in alpha) and (current != 'A'):
+		if (word[i] in lower) and (current != 'A'):
 			rule += current + str(i-buf)
 			rulez[current + str(i-buf)][str(s)] += 1
 			ruleCount[current + str(i-buf)] += 1
 			buf = i
 			current = 'A'
+			s=''
+		elif (word[i] in upper) and (current != 'U'):
+			rule += current + str(i-buf)
+			rulez[current + str(i-buf)][str(s)] += 1
+			ruleCount[current + str(i-buf)] += 1
+			buf = i
+			current = 'U'
 			s=''
 		elif (word[i] in digit) and (current != 'D'):
 			rule += current + str(i-buf)
@@ -126,7 +153,8 @@ if len(sys.argv) < 5:
 maxlength = int(sys.argv[1])
 maxsize = int(sys.argv[2])
 koeficient = 100
-alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+lower = 'abcdefghijklmnopqrstuvwxyz'
+upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 digit = '0123456789'
 special = "+=?'~!@#$%^&*:;,.-<>`_ "
 queue = deque([])
