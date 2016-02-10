@@ -1,7 +1,6 @@
 from itertools import *
 from operator import itemgetter
 from collections import deque
-from Bio import trie
 import heapq
 import copy
 import json
@@ -12,37 +11,37 @@ def prepareQueue(maxlength, maxsize):
 	for i in range(1, maxsize+1):
 		x = 'A'+str(i)
 		queue.append((x, maxlength-i))
-		if not rulez['Z'].has_key(x):
+		if not x in rulez['Z']:
 			rulez['Z'][x] = 1
-		if not rulez.has_key(x):
-			rulez[x] = trie.trie()
+		if not x in rulez:
+			rulez[x] = {}
 			for z in product(lower, repeat=i):
 				s = ''.join(z)
 				rulez[x][s] = 1
 		x = 'U'+str(i)
 		queue.append((x, maxlength-i))
-		if not rulez['Z'].has_key(x):
+		if not x in rulez['Z']:
 			rulez['Z'][x] = 1
-		if not rulez.has_key(x):
-			rulez[x] = trie.trie()
+		if not x in rulez:
+			rulez[x] = {}
 			for z in product(upper, repeat=i):
 				s = ''.join(z)
 				rulez[x][s] = 1
 		x = 'D'+str(i)
 		queue.append((x, maxlength-i))
-		if not rulez['Z'].has_key(x):
+		if not x in rulez['Z']:
 			rulez['Z'][x] = 1
-		if not rulez.has_key(x):
-			rulez[x] = trie.trie()
+		if not x in rulez:
+			rulez[x] = {}
 			for z in product(digit, repeat=i):
 				s = ''.join(z)
 				rulez[x][s] = 1
 		x = 'S'+str(i)
 		queue.append((x, maxlength-i))
-		if not rulez['Z'].has_key(x):
+		if not x in rulez['Z']:
 			rulez['Z'][x] = 1
-		if not rulez.has_key(x):
-			rulez[x] = trie.trie()
+		if not x in rulez:
+			rulez[x] = {}
 			for z in product(special, repeat=i):
 				s = ''.join(z)
 				rulez[x][s] = 1
@@ -142,7 +141,7 @@ def updateMyrules(word):
 	rule += current + str(len(word)-buf)
 	rulez[current + str(len(word)-buf)][str(s)] += 1
 	ruleCount[current + str(len(word)-buf)] += 1
-	if not rulez['Z'].has_key(rule):
+	if not rule in rulez['Z']:
 		rulez['Z'][rule] = 1
 	rulez['Z'][rule] += 1
 	ruleCount['Z'] += 1
@@ -157,14 +156,14 @@ koeficient = 100
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 digit = '0123456789'
-special = "+=?'~!@#$^&*:;,.-<>`_ "
+special = "+=?'~!@#$%^&*:;,.-<>`_ "
 queue = deque([])
-rulez = trie.trie()
-rulez['Z'] = trie.trie()
+rulez = {}
+rulez['Z'] = {}
 prepareQueue(maxlength,maxsize)
 createRules(maxsize)
-ruleCount = trie.trie()
-for rule in rulez.keys():
+ruleCount={}
+for rule in rulez:
 	ruleCount[rule] = len(rulez[rule])
 #print(ruleCount)
 with open(sys.argv[3]) as f:
@@ -175,17 +174,16 @@ with open(sys.argv[3]) as f:
 			updateMyrules(word)
 
 #rc = sum(ruleCount.values())
-for rule in rulez.keys():
-	for r in rulez[rule].keys():
-		if rulez[rule].has_key(r):
-			x = rulez[rule][r]
-			rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
+for rule in rulez:
+	for r in rulez[rule]:
+		x = rulez[rule][r]
+		rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
 
-for x in rulez.keys():
-	rulez[x] = sorted([(z, rulez[x][z]) for z in rulez[x].keys()], key=itemgetter(1), reverse=True)
+for x in rulez:
+	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
 
-with open(sys.argv[4], 'wb') as fp:
-    trie.save(fp, rulez)
+with open(sys.argv[4], 'w') as fp:
+    json.dump(rulez, fp)
 #print(ruleCount)
 #for rule in rulez:
 #	print(rule + ":")
