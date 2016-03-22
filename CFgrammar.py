@@ -156,7 +156,7 @@ koeficient = 100
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 digit = '0123456789'
-special = "+=?'~!@#$%^&*:;,.-<>`_()[] \\"
+special = "+=?'~!@#$%^&*:;,.-<>`_ "
 queue = deque([])
 rulez = {}
 rulez['Z'] = {}
@@ -173,7 +173,11 @@ with open(sys.argv[3]) as f:
 		word = line.rstrip('\n')
 		if len(word) > 0:
 			w = word.split(' ', 1)
-			updateMyrules(w[0], w[1])
+			try:
+				updateMyrules(w[1], int(w[0]))
+			except:
+				print(w[1] + " " + w[0])
+				raise
 
 for rule in rulez:
 	for r in rulez[rule]:
