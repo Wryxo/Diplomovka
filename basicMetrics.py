@@ -3,6 +3,8 @@ from math import sqrt
 
 d = {}
 roz = []
+indices = []
+totalIndices = 0
 c = 0
 cc = 0
 sooner = 0
@@ -18,6 +20,8 @@ with open(sys.argv[1]) as data_file:
 with open(sys.argv[2]) as data_file:    
 	for line in data_file:
 		if line[:-1] in d:
+			indices.append(cc)
+			totalIndices += cc
 			total += d[line[:-1]] - cc
 			roz.append(d[line[:-1]] - cc)
 			if d[line[:-1]] - cc > 0: 
@@ -42,6 +46,8 @@ for x in roz:
 var = rozptyl / len(roz)
 final = sqrt(var)
 
+print('avg index: ' + str(totalIndices / len(indices)))
 print('absolute: ' + str(total) + ' ' + str(sooner) + ' ' + str(later) + ' ' + str(same) + ' ' + str(len(roz)))
 print('average: ' + str(avg) + ' ' + str(var))
 print('deviation: ' + str(final))
+print(str(indices))

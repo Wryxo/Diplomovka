@@ -147,11 +147,14 @@ def updateMyrules(word, occ=1):
 	ruleCount['Z'] += occ
 
 if len(sys.argv) < 5:
-	print("maxpasslength maxnetsize inputfile outputfile")
+	print("maxpasslength maxnetsize inputfile outputfile alterMode genAll")
 	sys.exit()
 
 maxpasslength = int(sys.argv[1])
 maxnetsize = int(sys.argv[2])
+alterMode = False
+if len(sys.argv) == 6:
+	alterMode=True
 koeficient = 100
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -160,13 +163,11 @@ special = "+=?'~!@#$%^&*:;,.-<>`_ "
 queue = deque([])
 rulez = {}
 rulez['Z'] = {}
-
-prepareQueue(maxpasslength,maxnetsize)
-createRules(maxnetsize)
-
 ruleCount={}
+prepareQueue(maxpasslength,maxnetsize)
 for rule in rulez:
 	ruleCount[rule] = len(rulez[rule])
+createRules(maxnetsize)
 
 with open(sys.argv[3]) as f:
 	for line in f:
@@ -178,21 +179,31 @@ with open(sys.argv[3]) as f:
 			except:
 				print(w[1] + " " + w[0])
 				raise
+if alterMode == True:
+	for rule in rulez:
+		if (rule != 'Z'):
+			for r in rulez[rule]:
+				x = rulez[rule][r]
+				rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
 
-for rule in rulez:
-	for r in rulez[rule]:
-		x = rulez[rule][r]
-		rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
+	for r in rulez['Z']:
+		if (len(r) == 2):
+			x = rulez['Z'][r]
+			rulez['Z'][r] = float((x / ruleCount['Z']) * koeficient)
+
+	for r in rulez['Z']:
+		if (len(r) != 2):
+			rulez['Z'][r] = 1
+			for i in range(0, len(r), 2):
+				rulez['Z'][r] *= float(rulez['Z'][r[i]+r[i+1]])
+else:
+	for rule in rulez:
+		for r in rulez[rule]:
+			x = rulez[rule][r]
+			rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
 
 for x in rulez:
 	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
 
 with open(sys.argv[4], 'w') as fp:
-    json.dump(rulez, fp)
-#print(ruleCount)
-#for rule in rulez:
-#	print(rule + ":")
-#	for r in rulez[rule]:
-#		print("\t"+str(r[0])+"-"+"{0:.4f}".format(r[1]))
-#	print()
-#	print()
+    json.dump(rulez, fp, separators=(',',':'))

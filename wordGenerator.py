@@ -85,13 +85,14 @@ try:
 					newtask = (x, tmp)
 					add_task(newtask, newpriority)
 	with open(sys.argv[2]+'.ls', 'w') as outfile:
-		json.dump(pq, outfile)
+		json.dump(pq, outfile, separators=(',',':'))
 	print('Session saved')
 	sys.exit(0)
 except KeyboardInterrupt:
 	add_task(task, priority)
 	with open(sys.argv[2]+'.ls', 'w') as outfile:
-		json.dump(pq, outfile)
+	
+		json.dump(pq, outfile, separators=(',',':'))
 	print('Session saved')
 	sys.exit(0)
 
