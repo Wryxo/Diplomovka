@@ -14,7 +14,8 @@ total = 0
 
 with open(sys.argv[1]) as data_file:    
 	for line in data_file:
-		d[line[:-1]] = c
+		word = line.rstrip()
+		d[word] = c
 		c += 1
 
 with open(sys.argv[2]) as data_file:    
@@ -50,4 +51,3 @@ print('avg index: ' + str(totalIndices / len(indices)))
 print('absolute: ' + str(total) + ' ' + str(sooner) + ' ' + str(later) + ' ' + str(same) + ' ' + str(len(roz)))
 print('average: ' + str(avg) + ' ' + str(var))
 print('deviation: ' + str(final))
-print(str(indices))
