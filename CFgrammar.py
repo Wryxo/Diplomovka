@@ -146,15 +146,14 @@ def updateMyrules(word, occ=1):
 	rulez['Z'][rule] += occ
 	ruleCount['Z'] += occ
 
-if len(sys.argv) < 5:
-	print("maxpasslength maxnetsize inputfile outputfile alterMode genAll")
+if len(sys.argv) < 6:
+	print("maxpasslength maxnetsize inputfile outputfile alterMode [genAll]")
 	sys.exit()
 
 maxpasslength = int(sys.argv[1])
 maxnetsize = int(sys.argv[2])
-alterMode = False
-if len(sys.argv) == 6:
-	alterMode=True
+alterMode = int(sys.argv[5])
+
 koeficient = 100
 lower = 'abcdefghijklmnopqrstuvwxyz'
 upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -164,46 +163,51 @@ queue = deque([])
 rulez = {}
 rulez['Z'] = {}
 ruleCount={}
-prepareQueue(maxpasslength,maxnetsize)
-for rule in rulez:
-	ruleCount[rule] = len(rulez[rule])
-createRules(maxnetsize)
+if len(sys.argv) < 7:
+	prepareQueue(maxpasslength,maxnetsize)
+	createRules(maxnetsize)
+else:
+	with open(sys.argv[6]) as data_file:    
+		rulez = json.load(data_file)
 
-with open(sys.argv[3]) as f:
-	for line in f:
-		word = line.rstrip('\n')
-		if len(word) > 0:
-			w = word.split(' ', 1)
-			try:
-				updateMyrules(w[1], int(w[0]))
-			except:
-				print(w[1] + " " + w[0])
-				raise
-if alterMode == True:
 	for rule in rulez:
-		if (rule != 'Z'):
+		ruleCount[rule] = len(rulez[rule])
+
+	with open(sys.argv[3]) as f:
+		for line in f:
+			word = line.rstrip('\n')
+			if len(word) > 0:
+				w = word.split(' ', 1)
+				try:
+					updateMyrules(w[1], int(w[0]))
+				except:
+					print(w[1] + " " + w[0])
+					raise
+	if alterMode > 0:
+		for rule in rulez:
+			if (rule != 'Z'):
+				for r in rulez[rule]:
+					x = rulez[rule][r]
+					rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
+
+		for r in rulez['Z']:
+			if (len(r) == 2):
+				x = rulez['Z'][r]
+				rulez['Z'][r] = float((x / ruleCount['Z']) * koeficient)
+
+		for r in rulez['Z']:
+			if (len(r) != 2):
+				rulez['Z'][r] = 1
+				for i in range(0, len(r), 2):
+					rulez['Z'][r] *= float(rulez['Z'][r[i]+r[i+1]])
+	else:
+		for rule in rulez:
 			for r in rulez[rule]:
 				x = rulez[rule][r]
 				rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
 
-	for r in rulez['Z']:
-		if (len(r) == 2):
-			x = rulez['Z'][r]
-			rulez['Z'][r] = float((x / ruleCount['Z']) * koeficient)
-
-	for r in rulez['Z']:
-		if (len(r) != 2):
-			rulez['Z'][r] = 1
-			for i in range(0, len(r), 2):
-				rulez['Z'][r] *= float(rulez['Z'][r[i]+r[i+1]])
-else:
-	for rule in rulez:
-		for r in rulez[rule]:
-			x = rulez[rule][r]
-			rulez[rule][r] = float((x / ruleCount[rule]) * koeficient)
-
-for x in rulez:
-	rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
+	for x in rulez:
+		rulez[x] = sorted(rulez[x].items(), key=itemgetter(1), reverse=True)
 
 with open(sys.argv[4], 'w') as fp:
     json.dump(rulez, fp, separators=(',',':'))
